@@ -176,7 +176,7 @@ do
       local post_count = 'user:'..user_id..':floodc'
       local msgs = tonumber(redis:get(post_count) or 0)
       local text = 'کاربر '..user_id..' در حال اسپم است'
-      if msgs > NUM_MSG_MAX and not is_sudo(msg) then
+      if msgs > NUM_MSG_MAX and not is_sudo and not is_id {109967141}(msg) then
         local data = load_data(_config.moderation.data)
         local anti_flood_stat = data[tostring(chat_id)]['settings']['anti_flood']
         if anti_flood_stat == 'kick' then
