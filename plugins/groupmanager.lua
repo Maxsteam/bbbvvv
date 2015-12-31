@@ -365,7 +365,7 @@ return {
   usage = {
     admin = {
       '!mkgroup <group_name> : Make/create a new group.',
-      '!addgroup : Add group to moderation list.',
+      '!addgp : Add group to moderation list.',
       '!remgroup : Remove group from moderation list.'
     },
     moderator = {
@@ -391,7 +391,7 @@ return {
   },
   patterns = {
     "^!(about)$",
-    "^!(addgroup)$",
+    "^!(addgp)$",
     "%[(audio)%]",
     "%[(document)%]",
     "^!(group) (lock) (.*)$",
