@@ -44,7 +44,7 @@ do
 
   local function superunban_user(user_id, chat_id)
     redis:del('superbanned:'..user_id)
-    return 'کاربر '..user_id..' از بن خارج شد'
+    return 'User '..user_id..' unbanned'
   end
 
   local function is_banned(user_id, chat_id)
@@ -105,19 +105,19 @@ do
         chat_del_user(receiver, user, ok_cb, false)
       elseif extra.match == 'ban' then
         ban_user(user_id, chat_id)
-        send_msg(receiver, 'کاربر '..user_id..' بن شد', ok_cb,  true)
+        send_msg(receiver, 'User '..user_id..' banned', ok_cb,  true)
       elseif extra.match == 'superban' then
         superban_user(user_id, chat_id)
-        send_large_msg(receiver, full_name..' ['..user_id..'] بن جهانی شـــد!')
+        send_large_msg(receiver, full_name..' ['..user_id..'] globally banned!')
       elseif extra.match == 'unban' then
         unban_user(user_id, chat_id)
         send_msg(receiver, 'User '..user_id..' unbanned', ok_cb,  true)
       elseif extra.match == 'superunban' then
         superunban_user(user_id, chat_id)
-        send_large_msg(receiver, full_name..' ['..user_id..'] از بن جهانی خارج شد')
+        send_large_msg(receiver, full_name..' ['..user_id..'] globally unbanned!')
       end
     else
-      return 'در گروه استفاده کن'
+      return 'Use This in Your Groups'
     end
   end
 
@@ -142,23 +142,23 @@ do
             chat_del_user(receiver, user, ok_cb, false)
           elseif extra.match == 'ban' then
             ban_user(user_id, chat_id)
-            send_msg(receiver, 'کاربر @'..username..' بن شد', ok_cb,  true)
+            send_msg(receiver, 'User @'..username..' banned', ok_cb,  true)
           elseif extra.match == 'superban' then
             superban_user(user_id, chat_id)
-            send_msg(receiver, 'کاربر @'..username..' ['..user_id..'] بن جهانی شــد!', ok_cb,  true)
+            send_msg(receiver, 'User @'..username..' ['..user_id..'] globally banned!', ok_cb,  true)
           elseif extra.match == 'unban' then
             unban_user(user_id, chat_id)
-            send_msg(receiver, 'کاربر @'..username..' از بن خارج شد', ok_cb,  true)
+            send_msg(receiver, 'User @'..username..' unbanned', ok_cb,  true)
           elseif extra.match == 'superunban' then
             superunban_user(user_id, chat_id)
-            send_msg(receiver, 'کاربر @'..username..' ['..user_id..'] از بن جانی خارج شد!', ok_cb,  true)
+            send_msg(receiver, 'User @'..username..' ['..user_id..'] globally unbanned!', ok_cb,  true)
           end
         end
       else
-        return 'در گروه استفاده شود.'
+        return 'Use This in Your Groups.'
       end
     else
-      send_large_msg(receiver, 'کاربر @'..extra.user..' در گروه نیست.')
+      send_large_msg(receiver, 'No user @'..extra.user..' in this group.')
     end
   end
 
@@ -175,7 +175,7 @@ do
     if msg.from.type == 'user' then
       local post_count = 'user:'..user_id..':floodc'
       local msgs = tonumber(redis:get(post_count) or 0)
-      
+      local text = 'User '..user_id..' is flooding'
       if msgs > NUM_MSG_MAX and not is_sudo(msg) then
         local data = load_data(_config.moderation.data)
         local anti_flood_stat = data[tostring(chat_id)]['settings']['anti_flood']
@@ -186,7 +186,7 @@ do
         elseif anti_flood_stat == 'ban' then
           send_large_msg(receiver, text)
           ban_user(user_id, chat_id)
-          send_msg(receiver, 'کاربر '..user_id..' در حال اسپم بود که بن شد و دیگر قادر به بازگشت نخواهد بود', ok_cb,  true)
+          send_msg(receiver, 'User '..user_id..' banned', ok_cb,  true)
           msg = nil
         end
       end
@@ -206,7 +206,7 @@ do
         end
         print('Checking invited user '..user_id)
         if is_super_banned(user_id) or is_banned(user_id, chat_id) then
-          print('کاربر بن شده!')
+          print('User is banned!')
           kick_user(user_id, chat_id)
         end
       end
@@ -267,9 +267,9 @@ do
     if is_chat_msg(msg) then
       if matches[1] == 'kickme' then
         if is_sudo(msg) or is_admin(msg) then
-          return "ادمین را نمیتوان حذف کرد!"
+          return "I won't kick an admin!"
         elseif is_mod(msg) then
-          return "مدیر را نمیتوان پاک کرد"
+          return "I won't kick a moderator!"
         else
           kick_user(msg.from.id, msg.to.id)
         end
@@ -296,7 +296,7 @@ do
           for k,v in pairs(redis:keys('banned:'..msg.to.id..':*')) do
             text = text..k..'. '..v..'\n'
           end
-          return string.gsub(text, 'بن شد:'..msg.to.id..':', '')
+          return string.gsub(text, 'banned:'..msg.to.id..':', '')
         elseif matches[1] == 'unban' then
           if msg.reply_id then
             msgr = get_message(msg.reply_id, action_by_reply, {msg=msg, match=matches[1]})
@@ -314,14 +314,14 @@ do
               settings.anti_flood = 'kick'
               save_data(_config.moderation.data, data)
             end
-              return ' ضد اسپم فعــــال است اسپــــم کننده حذف میشود'
+              return 'Anti flood protection already enabled.\nFlooder will be kicked.'
             end
           if matches[2] == 'ban' then
             if settings.anti_flood ~= 'ban' then
               settings.anti_flood = 'ban'
               save_data(_config.moderation.data, data)
             end
-              return 'ضد اسپم فعال است فرد اسپم کننده حذف شده و قابل بازگشت نخواهد بود.'
+              return 'Anti flood  protection already enabled.\nFlooder will be banned.'
             end
           if matches[2] == 'disable' then
             if settings.anti_flood == 'no' then
@@ -329,7 +329,7 @@ do
             else
               settings.anti_flood = 'no'
               save_data(_config.moderation.data, data)
-              return 'ضد اسپم غیر فعال شد ممکن است گروه در خطر باشد.'
+              return 'Anti flood  protection has been disabled.'
             end
           end
         end
@@ -383,25 +383,25 @@ do
     description = "Plugin to manage bans, kicks and white/black lists.",
     usage = {
       user = {
-        "!kickme : حذف شما از گروه."
+        "!kickme : Kick yourself out of this group."
       },
       admin = {
-        "!superban : بن جهانی با رپلی.",
-        "!superban <user_id>/@<username> : بن جهانی با ایدی و یوزر نیم",
-        "!superunban : خارج کردن از بن جهانی با رپلی.",
-        "!superunban <user_id>/@<username> : خارج کردن از بن جهانی با ایدی و یوزر نیم."
+        "!superban : If type in reply, will ban user globally.",
+        "!superban <user_id>/@<username> : Kick user_id/username from all chat and kicks it if joins again",
+        "!superunban : If type in reply, will unban user globally.",
+        "!superunban <user_id>/@<username> : Unban user_id/username globally."
       },
       moderator = {
-        "!antiflood kick : فغال کردن ضد اسپم . حذف در صورت اسپم.",
-        "!antiflood ban : بن در صورت اسپم که فرد قابل بازگشت نخواهد بود.",
-        "!antiflood disable : ضد اسپم غیر فعال",
-        "!ban : بن با رپلی.",
-        "!ban <user_id>/<@username>: بن با ایدی و نام کاربری",
-        "!banlist : لیست کاربران بن شده.",
-        "!unban : خارج کردن از بن با رپلی.",
-        "!unban <user_id>/<@username>: خارج کردن از بن با ایدی و یوزرنیم",
-        "!kick : حذف با رپلی.",
-        "!kick <user_id>/<@username>: حذف با ایدی و یوزرنیم",
+        "!antiflood kick : Enable flood protection. Flooder will be kicked.",
+        "!antiflood ban : Enable flood protection. Flooder will be banned.",
+        "!antiflood disable : Disable flood protection",
+        "!ban : If type in reply, will ban user from chat group.",
+        "!ban <user_id>/<@username>: Kick user from chat and kicks it if joins chat again",
+        "!banlist : List users banned from chat group.",
+        "!unban : If type in reply, will unban user from chat group.",
+        "!unban <user_id>/<@username>: Unban user",
+        "!kick : If type in reply, will kick user from chat group.",
+        "!kick <user_id>/<@username>: Kick user from chat group",
         "!whitelist chat: Allow everybody on current chat to use the bot when whitelist mode is enabled",
         "!whitelist delete chat: Remove chat from whitelist",
         "!whitelist delete user <user_id>: Remove user from whitelist",
